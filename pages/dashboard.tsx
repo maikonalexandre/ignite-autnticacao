@@ -1,5 +1,5 @@
-import { destroyCookie } from "nookies";
 import { useContext, useEffect } from "react";
+import { Can } from "../components/Can";
 import { AuthContext } from "../context/AuthContext";
 import { useCan } from "../hooks/useCan";
 import { setupApiClient } from "../services/api";
@@ -7,7 +7,7 @@ import { api } from "../services/apiClient";
 import { withSSRAuth } from "../utils/withSSRAuth";
 
 export default function Dashboard() {
-  const { user } = useContext(AuthContext);
+  const { user, signOut } = useContext(AuthContext);
 
   const userCanSeeMetrics = useCan({
     permissions: ["metrics.list"],
@@ -24,29 +24,21 @@ export default function Dashboard() {
     <>
       <h1>Dashboard: {user?.email}</h1>
       {userCanSeeMetrics && <div>Metricas</div>}
+
+      <button onClick={signOut}>Sign out</button>
+
+      <Can permissions={["metrics.list"]}>
+        <h1>componente autorizado</h1>
+      </Can>
     </>
   );
 }
 
 export const getServerSideProps = withSSRAuth(async (ctx) => {
   const apiClient = setupApiClient(ctx);
-
-  // try {
-  const response = await api.get("/me");
-
-  // } catch (err) {
-  // destroyCookie(ctx, "nextauth.token");
-  // destroyCookie(ctx, "nextauth.refreshToken");
-
-  // return {
-  //   redirect: {
-  //     destination: "/",
-  //     permanent: false,
-  //   },
-  // };
-  // }
+  const response = await apiClient.get("/me");
 
   return {
     props: {},
   };
-});
+}, {});
